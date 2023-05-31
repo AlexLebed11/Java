@@ -1,4 +1,5 @@
 package org.example;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -7,6 +8,7 @@ import java.util.Date;
 
 public class Main {
     private static volatile int counter = 0;
+    private static final Object lock = new Object();
 
     public static void main(String[] args) {
         Thread thread1 = new Thread(new LoggingTask("Thread 1", 250));
@@ -41,14 +43,16 @@ public class Main {
                 while (counter < 240) {
                     Thread.sleep(interval);
 
-                    synchronized (Main.class) {
+                    synchronized (lock) {
                         counter++;
                     }
 
                     String currentTime = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
 
-                    writer.println(threadName + ": " + currentTime + " - Counter: " + counter);
-                    writer.flush();
+                    synchronized (writer) {
+                        writer.println(threadName + ": " + currentTime + " - Counter: " + counter);
+                        writer.flush();
+                    }
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
